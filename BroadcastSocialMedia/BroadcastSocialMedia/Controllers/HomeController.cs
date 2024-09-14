@@ -23,22 +23,33 @@ namespace BroadcastSocialMedia.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Retrieve the logged-in user
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return Redirect("/Account/Login"); // Redirect if no user is logged in
+                return Redirect("/Account/Login"); 
             }
 
-            // Load the user from the database, including the "ListeningTo" collection
             var dbUser = await _dbContext.Users
-                .Include(u => u.ListeningTo)  // Eagerly load the ListeningTo collection
+                .Include(u => u.ListeningTo) 
+                .ThenInclude(u => u.Broadcasts) 
                 .FirstOrDefaultAsync(u => u.Id == user.Id);
 
-            // Ensure the collection is properly loaded
-            var listeningTo = dbUser.ListeningTo;
+            if (dbUser == null)
+            {
+                return NotFound();
+            }
 
-            return View();
+            var broadcasts = dbUser.ListeningTo
+                .SelectMany(u => u.Broadcasts) 
+                .OrderByDescending(b => b.Published) 
+                .ToList();
+
+            var viewModel = new HomeIndexViewModel
+            {
+                Broadcasts = broadcasts
+            };
+
+            return View(viewModel);
         }
 
         public IActionResult Privacy()
@@ -68,5 +79,7 @@ namespace BroadcastSocialMedia.Controllers
 
             return Redirect("/");
         }
+
+
     }
 }
