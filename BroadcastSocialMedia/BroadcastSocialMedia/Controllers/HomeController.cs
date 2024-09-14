@@ -3,6 +3,7 @@ using BroadcastSocialMedia.Models;
 using BroadcastSocialMedia.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
 namespace BroadcastSocialMedia.Controllers
@@ -20,8 +21,23 @@ namespace BroadcastSocialMedia.Controllers
             _dbContext = dbContext;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            // Retrieve the logged-in user
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Redirect("/Account/Login"); // Redirect if no user is logged in
+            }
+
+            // Load the user from the database, including the "ListeningTo" collection
+            var dbUser = await _dbContext.Users
+                .Include(u => u.ListeningTo)  // Eagerly load the ListeningTo collection
+                .FirstOrDefaultAsync(u => u.Id == user.Id);
+
+            // Ensure the collection is properly loaded
+            var listeningTo = dbUser.ListeningTo;
+
             return View();
         }
 

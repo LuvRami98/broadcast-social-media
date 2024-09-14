@@ -4,6 +4,7 @@ using BroadcastSocialMedia.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BroadcastSocialMedia.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240914105840_AddedListeningTo")]
+    partial class AddedListeningTo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,21 +25,6 @@ namespace BroadcastSocialMedia.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ApplicationUserApplicationUser", b =>
-                {
-                    b.Property<string>("ListenersId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ListeningToId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("ListenersId", "ListeningToId");
-
-                    b.HasIndex("ListeningToId");
-
-                    b.ToTable("UserListenings", (string)null);
-                });
-
             modelBuilder.Entity("BroadcastSocialMedia.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -44,6 +32,9 @@ namespace BroadcastSocialMedia.Data.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -93,6 +84,8 @@ namespace BroadcastSocialMedia.Data.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -267,19 +260,11 @@ namespace BroadcastSocialMedia.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ApplicationUserApplicationUser", b =>
+            modelBuilder.Entity("BroadcastSocialMedia.Models.ApplicationUser", b =>
                 {
                     b.HasOne("BroadcastSocialMedia.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("ListenersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BroadcastSocialMedia.Models.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("ListeningToId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
-                        .IsRequired();
+                        .WithMany("ListeningTo")
+                        .HasForeignKey("ApplicationUserId");
                 });
 
             modelBuilder.Entity("BroadcastSocialMedia.Models.Broadcast", b =>
@@ -345,6 +330,8 @@ namespace BroadcastSocialMedia.Data.Migrations
             modelBuilder.Entity("BroadcastSocialMedia.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Broadcasts");
+
+                    b.Navigation("ListeningTo");
                 });
 #pragma warning restore 612, 618
         }
