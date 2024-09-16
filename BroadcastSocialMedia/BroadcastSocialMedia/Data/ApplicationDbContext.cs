@@ -17,7 +17,6 @@ namespace BroadcastSocialMedia.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure the self-referencing many-to-many relationship
             modelBuilder.Entity<ApplicationUser>()
                 .HasMany(u => u.ListeningTo)
                 .WithMany(u => u.Listeners)

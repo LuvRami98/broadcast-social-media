@@ -1,28 +1,43 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @model UsersShowUserViewModel
-@inject UserManager<ApplicationUser> UserManager
 
 @{
-    var user = await UserManager.GetUserAsync(User);
+    var loggedInUser = Model.LoggedInUser; // Access the logged-in user from the view model
     ViewData["Title"] = Model.User.Name;
+    bool isListening = loggedInUser != null && loggedInUser.ListeningTo.Any(l => l.Id == Model.User.Id);  // Correct check if already listening
 }
 
 <div>
     <h1>Broadcasts from @Model.User.Name</h1>
 
-    @if (user != null && user.Id != Model.User.Id)
+    @if (loggedInUser != null && loggedInUser.Id != Model.User.Id)
     {
-        <form action="/Users/Listen" method="post">
-            <input type="hidden" name="UserId" value="@Model.User.Id" />
-            <input type="submit" value="Listen to" />
-        </form>
+        @if (!isListening)
+        {
+            <form action="/Users/Listen" method="post">
+                <input type="hidden" name="UserId" value="@Model.User.Id" />
+                <input type="submit" value="Listen to" />
+            </form>
+        }
+        else
+        {
+            <form action="/Users/Unlisten" method="post">
+                <input type="hidden" name="UserId" value="@Model.User.Id" />
+                <input type="submit" value="Stop Listening" />
+            </form>
+        }
     }
 
-    @foreach (var broadcast in Model.Broadcasts)
+    @if (TempData["SuccessMessage"] != null)
     {
-        <p>
-            <b>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</b>:
-            @broadcast.Message
-        </p>
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
     }
 </div>
+
+@foreach (var broadcast in Model.Broadcasts)
+{
+    <p>
+        <b>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</b>:
+        @broadcast.Message
+    </p>
+}
