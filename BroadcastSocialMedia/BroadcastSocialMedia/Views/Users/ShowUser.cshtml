@@ -2,9 +2,9 @@
 @model UsersShowUserViewModel
 
 @{
-    var loggedInUser = Model.LoggedInUser; // Access the logged-in user from the view model
+    var loggedInUser = Model.LoggedInUser;
     ViewData["Title"] = Model.User.Name;
-    bool isListening = loggedInUser != null && loggedInUser.ListeningTo.Any(l => l.Id == Model.User.Id);  // Correct check if already listening
+    bool isListening = loggedInUser != null && loggedInUser.ListeningTo.Any(l => l.Id == Model.User.Id);
 }
 
 <div>
@@ -12,20 +12,16 @@
 
     @if (loggedInUser != null && loggedInUser.Id != Model.User.Id)
     {
-        @if (!isListening)
-        {
-            <form action="/Users/Listen" method="post">
-                <input type="hidden" name="UserId" value="@Model.User.Id" />
-                <input type="submit" value="Listen to" />
-            </form>
-        }
-        else
-        {
-            <form action="/Users/Unlisten" method="post">
-                <input type="hidden" name="UserId" value="@Model.User.Id" />
-                <input type="submit" value="Stop Listening" />
-            </form>
-        }
+        <div>
+            @if (!isListening)
+            {
+                <button id="listenButton" onclick="handleListen('@Model.User.Id', true)">Listen to</button>
+            }
+            else
+            {
+                <button id="unlistenButton" onclick="handleListen('@Model.User.Id', false)">Stop Listening</button>
+            }
+        </div>
     }
 
     @if (TempData["SuccessMessage"] != null)
@@ -41,3 +37,39 @@
         @broadcast.Message
     </p>
 }
+
+@Html.AntiForgeryToken() 
+
+
+<script>
+    async function handleListen(userId, isListening) {
+        const url = isListening ? '/Users/Listen' : '/Users/Unlisten';
+
+        const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+        console.log('Sending request to:', url);
+        console.log('CSRF Token:', csrfToken);
+        console.log('UserId:', userId);
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded', 
+                    'X-CSRF-TOKEN': csrfToken 
+                },
+                body: new URLSearchParams({ UserId: userId }).toString() 
+            });
+
+            if (response.ok) {
+                console.log('Request succeeded, but page reload is disabled for debugging.');
+            } else {
+                const errorText = await response.text(); 
+                console.error('Error:', response.status, errorText);
+            }
+        } catch (error) {
+            console.error('Error during request:', error);
+        }
+    }
+</script>
+

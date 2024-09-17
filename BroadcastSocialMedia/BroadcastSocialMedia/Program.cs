@@ -22,8 +22,8 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 // Configure authentication cookies and login path
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Account/Login";  // Make sure the path is correct
-    options.AccessDeniedPath = "/Account/AccessDenied";  // Access denied path
+    options.LoginPath = "/Account/Login";  
+    options.AccessDeniedPath = "/Account/AccessDenied";  
 });
 
 builder.Services.AddControllersWithViews();
@@ -47,7 +47,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 // Ensure authentication is added to the pipeline
-app.UseAuthentication();  // <-- Add this to make sure Authentication is used
+app.UseAuthentication();  
 
 app.UseAuthorization();
 

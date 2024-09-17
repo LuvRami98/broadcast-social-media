@@ -44,7 +44,6 @@ namespace BroadcastSocialMedia.Controllers
                 .Where(u => u.Id == id)
                 .FirstOrDefaultAsync();
 
-            // Eagerly load the 'ListeningTo' collection for the logged-in user
             var loggedInUser = await _userManager.Users
                 .Include(u => u.ListeningTo)
                 .FirstOrDefaultAsync(u => u.Id == _userManager.GetUserId(User));
@@ -53,76 +52,90 @@ namespace BroadcastSocialMedia.Controllers
             {
                 Broadcasts = broadcasts,
                 User = user,
-                LoggedInUser = loggedInUser // Pass the logged-in user to the view model
+                LoggedInUser = loggedInUser
             };
 
             return View(viewModel);
         }
 
-
-
         [HttpPost, Route("/Users/Listen")]
+        [ValidateAntiForgeryToken]  
         public async Task<IActionResult> ListenToUser(UsersListenToUserViewModel viewModel)
         {
             var loggedInUser = await _userManager.GetUserAsync(User);
             if (loggedInUser == null)
             {
+                _logger.LogWarning("No logged-in user found.");
                 return Redirect("/Account/Login");
             }
 
-            var userToListenTo = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == viewModel.UserId);
+            _logger.LogInformation("Received Listen request with UserId: {UserId}", viewModel.UserId);
+            _logger.LogInformation("Anti-Forgery Token: {AntiForgeryToken}", HttpContext.Request.Headers["X-CSRF-TOKEN"]);
 
-            if (userToListenTo != null && !loggedInUser.ListeningTo.Any(u => u.Id == userToListenTo.Id)) 
+            foreach (var header in HttpContext.Request.Headers)
             {
-                _logger.LogInformation("User: {UserId} is attempting to listen to {OtherUserId}", loggedInUser.Id, userToListenTo.Id);
+                _logger.LogInformation("Header: {Header} = {Value}", header.Key, header.Value);
+            }
 
+            var userToListenTo = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == viewModel.UserId);
+            if (userToListenTo == null)
+            {
+                _logger.LogWarning("User to listen to not found.");
+                return BadRequest(); 
+            }
+
+            _logger.LogInformation("Adding user {OtherUserId} to {UserId}'s listening list", userToListenTo.Id, loggedInUser.Id);
+
+            if (!loggedInUser.ListeningTo.Any(u => u.Id == userToListenTo.Id))
+            {
                 loggedInUser.ListeningTo.Add(userToListenTo);
-                await _userManager.UpdateAsync(loggedInUser);
-                await _dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();  
+                _logger.LogInformation("User {UserId} successfully added to listening list", userToListenTo.Id);
             }
             else
             {
-                _logger.LogWarning("User: {UserId} is already listening to {OtherUserId}", loggedInUser.Id, userToListenTo.Id);
+                _logger.LogInformation("User {UserId} is already listening to {OtherUserId}", loggedInUser.Id, userToListenTo.Id);
             }
 
-            return Redirect($"/Users/{viewModel.UserId}");
+            return Ok(); 
         }
 
-
         [HttpPost, Route("/Users/Unlisten")]
+        [ValidateAntiForgeryToken]  
         public async Task<IActionResult> StopListeningToUser(UsersListenToUserViewModel viewModel)
         {
-            _logger.LogInformation("StopListeningToUser called for UserId: {UserId}", viewModel.UserId); // Add this for debugging
+            _logger.LogInformation("Received Unlisten request with UserId: {UserId}", viewModel.UserId);
+            _logger.LogInformation("Anti-Forgery Token: {AntiForgeryToken}", HttpContext.Request.Headers["X-CSRF-TOKEN"]);
 
-            // Get the logged-in user
+            foreach (var header in HttpContext.Request.Headers)
+            {
+                _logger.LogInformation("Header: {Header} = {Value}", header.Key, header.Value);
+            }
+
             var loggedInUser = await _userManager.GetUserAsync(User);
             if (loggedInUser == null)
             {
                 return Redirect("/Account/Login");
             }
 
-            // Get the user to stop listening to
             var userToStopListeningTo = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == viewModel.UserId);
-
-            // Check if the user exists and the logged-in user is currently listening to them
-            if (userToStopListeningTo != null && loggedInUser.ListeningTo.Contains(userToStopListeningTo))
+            if (userToStopListeningTo == null)
             {
-                _logger.LogInformation("User: {UserId} is stopping listening to {OtherUserId}", loggedInUser.Id, userToStopListeningTo.Id);
-
-                _dbContext.Entry(loggedInUser).Collection(u => u.ListeningTo).Load();
-                loggedInUser.ListeningTo.Remove(userToStopListeningTo);
-
-                _dbContext.Update(loggedInUser);
-                await _dbContext.SaveChangesAsync();
-
-                // Log success
-                _logger.LogInformation("Successfully stopped listening to {OtherUserId}", userToStopListeningTo.Id);
+                _logger.LogWarning("User to stop listening to not found.");
+                return BadRequest(); 
             }
 
-            TempData["SuccessMessage"] = "You have successfully stopped listening to the user.";
-            return Redirect($"/Users/{viewModel.UserId}");
+            _logger.LogInformation("User {UserId} is attempting to stop listening to {OtherUserId}", loggedInUser.Id, userToStopListeningTo.Id);
 
+            if (loggedInUser.ListeningTo.Contains(userToStopListeningTo))
+            {
+                _dbContext.Entry(loggedInUser).Collection(u => u.ListeningTo).Load();
+                loggedInUser.ListeningTo.Remove(userToStopListeningTo);
+                await _dbContext.SaveChangesAsync();  
+                _logger.LogInformation("User {UserId} successfully removed from listening list", userToStopListeningTo.Id);
+            }
+
+            return Ok(); 
         }
-
     }
 }
