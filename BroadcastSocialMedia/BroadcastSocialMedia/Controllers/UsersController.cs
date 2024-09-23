@@ -1,5 +1,6 @@
 ﻿using BroadcastSocialMedia.Data;
 using BroadcastSocialMedia.Models;
+using BroadcastSocialMedia.Services;
 using BroadcastSocialMedia.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +13,16 @@ namespace BroadcastSocialMedia.Controllers
         private readonly ILogger<UsersController> _logger;
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserService _userService;
+        private readonly IBroadcastService _broadcastService;
 
-        public UsersController(ILogger<UsersController> logger, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
+        public UsersController(ILogger<UsersController> logger, ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, IUserService userService, IBroadcastService broadcastService)
         {
             _logger = logger;
             _dbContext = dbContext;
             _userManager = userManager;
+            _userService = userService;
+            _broadcastService = broadcastService;
         }
         public async Task<IActionResult> Index(UsersIndexViewModel viewModel)
         {
@@ -32,36 +37,40 @@ namespace BroadcastSocialMedia.Controllers
             return View(viewModel);
         }
 
-        [Route("/Users/{id}")]
-        public async Task<IActionResult> ShowUser(string id)
+        public async Task<IActionResult> ShowUser(string userId)
         {
-            var broadcasts = await _dbContext.Broadcasts
-                .Where(b => b.User.Id == id)
-                .OrderByDescending(b => b.Published)
-                .ToListAsync();
-
-            var user = await _dbContext.Users
-                .Where(u => u.Id == id)
-                .FirstOrDefaultAsync();
-
-            var loggedInUser = await _userManager.Users
+            var loggedInUser = await _dbContext.Users
                 .Include(u => u.ListeningTo)
-                .FirstOrDefaultAsync(u => u.Id == _userManager.GetUserId(User));
+                .FirstOrDefaultAsync(u => u.Id == _userManager.GetUserId(User)); // Make sure ListeningTo is loaded
 
-            var viewModel = new UsersShowUserViewModel()
+            var user = await _userService.GetUserByIdAsync(userId);
+
+            if (user == null)
             {
-                Broadcasts = broadcasts,
+                return NotFound();
+            }
+
+            var broadcasts = await _broadcastService.GetBroadcastsForUser(userId);
+
+            var viewModel = new UsersShowUserViewModel
+            {
                 User = user,
+                Broadcasts = broadcasts,
                 LoggedInUser = loggedInUser
             };
 
             return View(viewModel);
         }
 
-        [HttpPost, Route("/Users/Listen")]
-        [ValidateAntiForgeryToken]  
-        public async Task<IActionResult> ListenToUser(UsersListenToUserViewModel viewModel)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Listen(UsersListenToUserViewModel viewModel)
         {
+            if (string.IsNullOrEmpty(viewModel.UserId))
+            {
+                return BadRequest("UserId is required.");
+            }
+
             var loggedInUser = await _userManager.GetUserAsync(User);
             if (loggedInUser == null)
             {
@@ -70,72 +79,34 @@ namespace BroadcastSocialMedia.Controllers
             }
 
             _logger.LogInformation("Received Listen request with UserId: {UserId}", viewModel.UserId);
-            _logger.LogInformation("Anti-Forgery Token: {AntiForgeryToken}", HttpContext.Request.Headers["X-CSRF-TOKEN"]);
 
-            foreach (var header in HttpContext.Request.Headers)
-            {
-                _logger.LogInformation("Header: {Header} = {Value}", header.Key, header.Value);
-            }
-
-            var userToListenTo = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == viewModel.UserId);
-            if (userToListenTo == null)
-            {
-                _logger.LogWarning("User to listen to not found.");
-                return BadRequest(); 
-            }
-
-            _logger.LogInformation("Adding user {OtherUserId} to {UserId}'s listening list", userToListenTo.Id, loggedInUser.Id);
-
-            if (!loggedInUser.ListeningTo.Any(u => u.Id == userToListenTo.Id))
-            {
-                loggedInUser.ListeningTo.Add(userToListenTo);
-                await _dbContext.SaveChangesAsync();  
-                _logger.LogInformation("User {UserId} successfully added to listening list", userToListenTo.Id);
-            }
-            else
-            {
-                _logger.LogInformation("User {UserId} is already listening to {OtherUserId}", loggedInUser.Id, userToListenTo.Id);
-            }
+            await _userService.ListenToUserAsync(loggedInUser.Id, viewModel.UserId);
 
             return Ok(); 
         }
 
-        [HttpPost, Route("/Users/Unlisten")]
-        [ValidateAntiForgeryToken]  
-        public async Task<IActionResult> StopListeningToUser(UsersListenToUserViewModel viewModel)
-        {
-            _logger.LogInformation("Received Unlisten request with UserId: {UserId}", viewModel.UserId);
-            _logger.LogInformation("Anti-Forgery Token: {AntiForgeryToken}", HttpContext.Request.Headers["X-CSRF-TOKEN"]);
 
-            foreach (var header in HttpContext.Request.Headers)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Unlisten(UsersListenToUserViewModel viewModel)
+        {
+            if (string.IsNullOrEmpty(viewModel.UserId))
             {
-                _logger.LogInformation("Header: {Header} = {Value}", header.Key, header.Value);
+                return BadRequest("UserId is required.");
             }
 
             var loggedInUser = await _userManager.GetUserAsync(User);
             if (loggedInUser == null)
             {
+                _logger.LogWarning("No logged-in user found.");
                 return Redirect("/Account/Login");
             }
 
-            var userToStopListeningTo = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == viewModel.UserId);
-            if (userToStopListeningTo == null)
-            {
-                _logger.LogWarning("User to stop listening to not found.");
-                return BadRequest(); 
-            }
+            await _userService.UnlistenToUserAsync(loggedInUser.Id, viewModel.UserId);
 
-            _logger.LogInformation("User {UserId} is attempting to stop listening to {OtherUserId}", loggedInUser.Id, userToStopListeningTo.Id);
-
-            if (loggedInUser.ListeningTo.Contains(userToStopListeningTo))
-            {
-                _dbContext.Entry(loggedInUser).Collection(u => u.ListeningTo).Load();
-                loggedInUser.ListeningTo.Remove(userToStopListeningTo);
-                await _dbContext.SaveChangesAsync();  
-                _logger.LogInformation("User {UserId} successfully removed from listening list", userToStopListeningTo.Id);
-            }
-
-            return Ok(); 
+            TempData["SuccessMessage"] = $"You have stopped listening to the user.";
+            return RedirectToAction("ShowUser", new { userId = viewModel.UserId });
         }
+
     }
 }

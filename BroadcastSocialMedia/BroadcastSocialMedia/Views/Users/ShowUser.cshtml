@@ -3,25 +3,34 @@
 
 @{
     var loggedInUser = Model.LoggedInUser;
-    ViewData["Title"] = Model.User.Name;
-    bool isListening = loggedInUser != null && loggedInUser.ListeningTo.Any(l => l.Id == Model.User.Id);
+    bool isListening = loggedInUser != null && loggedInUser.ListeningTo != null &&
+                       loggedInUser.ListeningTo.Any(l => l.Id == Model.User.Id);
 }
 
 <div>
-    <h1>Broadcasts from @Model.User.Name</h1>
-
-    @if (loggedInUser != null && loggedInUser.Id != Model.User.Id)
+    @if (Model.User != null)
     {
-        <div>
-            @if (!isListening)
-            {
-                <button id="listenButton" onclick="handleListen('@Model.User.Id', true)">Listen to</button>
-            }
-            else
-            {
-                <button id="unlistenButton" onclick="handleListen('@Model.User.Id', false)">Stop Listening</button>
-            }
-        </div>
+        <h1>Broadcasts from @Model.User.Name</h1>
+
+        @if (loggedInUser != null && loggedInUser.Id != Model.User.Id)
+        {
+            <div>
+                @Html.AntiForgeryToken() 
+                @if (!isListening)
+                {
+                    <button id="listenButton" onclick="handleListen('@Model.User.Id', true)">Follow @Model.User.Name</button>
+                }
+                else
+                {
+                    <button id="unlistenButton" onclick="handleListen('@Model.User.Id', false)">Unfollow @Model.User.Name</button>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        ViewData["Title"] = "User not found";
+        <h1>User not found</h1>
     }
 
     @if (TempData["SuccessMessage"] != null)
@@ -30,46 +39,15 @@
     }
 </div>
 
-@foreach (var broadcast in Model.Broadcasts)
+@if (Model.User != null)
 {
-    <p>
-        <b>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</b>:
-        @broadcast.Message
-    </p>
+    @foreach (var broadcast in Model.Broadcasts)
+    {
+        <p>
+            <b>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</b>:
+            @broadcast.Message
+        </p>
+    }
 }
 
-@Html.AntiForgeryToken() 
-
-
-<script>
-    async function handleListen(userId, isListening) {
-        const url = isListening ? '/Users/Listen' : '/Users/Unlisten';
-
-        const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
-
-        console.log('Sending request to:', url);
-        console.log('CSRF Token:', csrfToken);
-        console.log('UserId:', userId);
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded', 
-                    'X-CSRF-TOKEN': csrfToken 
-                },
-                body: new URLSearchParams({ UserId: userId }).toString() 
-            });
-
-            if (response.ok) {
-                console.log('Request succeeded, but page reload is disabled for debugging.');
-            } else {
-                const errorText = await response.text(); 
-                console.error('Error:', response.status, errorText);
-            }
-        } catch (error) {
-            console.error('Error during request:', error);
-        }
-    }
-</script>
-
+<script src="~/js/site.js"></script>
