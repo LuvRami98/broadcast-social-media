@@ -6,13 +6,21 @@
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-   
 
     <h2>New Broadcast</h2>
 
-    <form method="post" action="/Home/Broadcast">
-        <textarea name="Message"></textarea> <br />
-        <input type="submit" value="Post" />
+    <form method="post" action="/Home/Broadcast" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <div>
+            <textarea name="Message" placeholder="Enter your message"></textarea>
+        </div>
+        <div>
+            <label for="Image">Upload Image (optional):</label>
+            <input type="file" name="Image" />
+        </div>
+        <div>
+            <input type="submit" value="Post" />
+        </div>
     </form>
 </div>
 
@@ -21,13 +29,26 @@
 <div class="index-broadcasts">
     @foreach (var broadcast in Model.Broadcasts)
     {
-        <p>
-            <b>
-                @broadcast.User.Name 
-                (@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString())
-                </b>:
-            @broadcast.Message
-        </p>
-    }
+        <div class="broadcast-item">
+            <p>
+                <b>
+                    @broadcast.User.Name
+                    (@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString())
+                </b>
 
+                @if (!string.IsNullOrEmpty(broadcast.Message))
+                {
+                    <text>: @broadcast.Message</text>
+                }
+            </p>
+
+            @if (!string.IsNullOrEmpty(broadcast.ImagePath))
+            {
+                <div>
+                    <img src="@broadcast.ImagePath" alt="Broadcast image" style="max-width: 100%; height: auto;" />
+                </div>
+            }
+        </div>
+        <hr />
+    }
 </div>

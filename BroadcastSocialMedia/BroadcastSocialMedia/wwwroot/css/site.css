@@ -102,3 +102,17 @@ footer {
     width: 100%;
     background-color: #f8f9fa;
 }
+
+.index-broadcasts {
+    margin-top: 20px;
+}
+
+.broadcast-item {
+    margin-bottom: 20px;
+}
+
+    .broadcast-item img {
+        margin-top: 10px;
+        border: 1px solid #ddd;
+        padding: 5px;
+    }

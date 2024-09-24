@@ -13,12 +13,18 @@ namespace BroadcastSocialMedia.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
+        private readonly IWebHostEnvironment _hostingEnvironment;
 
-        public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext)
+        public HomeController(
+            ILogger<HomeController> logger,
+            UserManager<ApplicationUser> userManager,
+            ApplicationDbContext dbContext,
+            IWebHostEnvironment hostingEnvironment)
         {
             _logger = logger;
             _userManager = userManager;
             _dbContext = dbContext;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         public async Task<IActionResult> Index()
@@ -26,12 +32,12 @@ namespace BroadcastSocialMedia.Controllers
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return Redirect("/Account/Login"); 
+                return Redirect("/Account/Login");
             }
 
             var dbUser = await _dbContext.Users
-                .Include(u => u.ListeningTo) 
-                .ThenInclude(u => u.Broadcasts) 
+                .Include(u => u.ListeningTo)
+                .ThenInclude(u => u.Broadcasts)
                 .FirstOrDefaultAsync(u => u.Id == user.Id);
 
             if (dbUser == null)
@@ -40,8 +46,8 @@ namespace BroadcastSocialMedia.Controllers
             }
 
             var broadcasts = dbUser.ListeningTo
-                .SelectMany(u => u.Broadcasts) 
-                .OrderByDescending(b => b.Published) 
+                .SelectMany(u => u.Broadcasts)
+                .OrderByDescending(b => b.Published)
                 .ToList();
 
             var viewModel = new HomeIndexViewModel
@@ -64,22 +70,46 @@ namespace BroadcastSocialMedia.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Broadcast(HomeBroadcastViewModel viewModel)
         {
             var user = await _userManager.GetUserAsync(User);
-            var broadcast = new Broadcast()
+            if (user == null)
+            {
+                return Redirect("/Account/Login");
+            }
+
+            var broadcast = new Broadcast
             {
                 Message = viewModel.Message,
-                User = user
+                Published = DateTime.Now,
+                UserId = user.Id
             };
 
-            _dbContext.Broadcasts.Add(broadcast);
+            if (viewModel.Image != null && viewModel.Image.Length > 0)
+            {
+                var uploadsFolder = Path.Combine(_hostingEnvironment.WebRootPath, "uploads");
 
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + viewModel.Image.FileName;
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await viewModel.Image.CopyToAsync(fileStream);
+                }
+
+                broadcast.ImagePath = "/uploads/" + uniqueFileName;
+            }
+
+            _dbContext.Broadcasts.Add(broadcast);
             await _dbContext.SaveChangesAsync();
 
-            return Redirect("/");
+            return RedirectToAction("Index");
         }
-
-
     }
 }

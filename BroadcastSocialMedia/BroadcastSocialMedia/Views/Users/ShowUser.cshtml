@@ -47,7 +47,15 @@
             <b>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</b>:
             @broadcast.Message
         </p>
+
+        @if (!string.IsNullOrEmpty(broadcast.ImagePath))
+        {
+            <div>
+                <img src="@broadcast.ImagePath" alt="Broadcast image" style="max-width: 30%; height: auto;" />
+            </div>
+        }
     }
 }
+
 
 <script src="~/js/site.js"></script>

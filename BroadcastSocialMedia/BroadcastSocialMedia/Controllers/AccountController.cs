@@ -36,7 +36,6 @@ namespace BroadcastSocialMedia.Controllers
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             }
 
-            // If we got this far, something failed, redisplay form
             return View(model);
         }
 
