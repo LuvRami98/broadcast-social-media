@@ -11,5 +11,7 @@ namespace BroadcastSocialMedia.Models
         public ICollection<ApplicationUser> ListeningTo { get; set; } = new List<ApplicationUser>();
 
         public ICollection<ApplicationUser> Listeners { get; set; } = new List<ApplicationUser>();
+
+        public string? ProfilePicturePath { get; set; }
     }
 }

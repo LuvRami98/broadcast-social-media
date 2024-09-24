@@ -1,10 +1,72 @@
-﻿@model ProfileIndexViewModel 
+﻿@model ProfileIndexViewModel
 
 <div>
     <h1>Update profile</h1>
 
+    <div>
+        <h3>Current Profile Picture</h3>
+        @if (!string.IsNullOrEmpty(Model.CurrentProfilePicturePath))
+        {
+            <img src="@Model.CurrentProfilePicturePath" alt="Profile Picture" style="max-width: 150px;" />
+        }
+        else
+        {
+            <p>No profile picture set.</p>
+        }
+    </div>
+
+    <hr />
+
+    <h3>Change Profile Picture</h3>
+
+    <form method="post" enctype="multipart/form-data" action="/Profile/ProfilePicture">
+        @Html.AntiForgeryToken()
+        <div>
+            <button type="button" onclick="toggleImageOptions()">Change profile picture</button>
+        </div>
+
+        <div id="imageOptions" style="display: none; margin-top: 20px;">
+            <div style="margin-bottom: 20px;">
+                <button type="button" onclick="toggleUpload()">Upload new image</button>
+                <div id="uploadSection" style="display: none;">
+                    <input type="file" name="ProfilePicture" />
+                </div>
+            </div>
+
+            <div>
+                <button type="button" onclick="toggleSelectExisting()">Choose from existing images</button>
+                <div id="existingSection" style="display: none;">
+                    <p>Select one of your previously uploaded images (feature to be added)</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <input type="submit" value="Save Changes" />
+        </div>
+    </form>
+
+    <hr />
+
     <form method="post" action="/Profile/Update">
-        <input name="Name" value="@Model.Name" placeholder="Name"/>
-        <input type="submit" value="Save"/>
+        <input name="Name" value="@Model.Name" placeholder="Name" />
+        <input type="submit" value="Save" />
     </form>
 </div>
+
+<script>
+    function toggleImageOptions() {
+        var options = document.getElementById("imageOptions");
+        options.style.display = options.style.display === "none" ? "block" : "none";
+    }
+
+    function toggleUpload() {
+        var upload = document.getElementById("uploadSection");
+        upload.style.display = upload.style.display === "none" ? "block" : "none";
+    }
+
+    function toggleSelectExisting() {
+        var existing = document.getElementById("existingSection");
+        existing.style.display = existing.style.display === "none" ? "block" : "none";
+    }
+</script>
