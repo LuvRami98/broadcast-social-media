@@ -1,24 +1,4 @@
-::-webkit-scrollbar-button {
-    display: none; 
-}
-
-
-::-webkit-scrollbar {
-    width: 10px; 
-    height: 6px;
-}
-
-::-webkit-scrollbar-thumb {
-    background-color: #aaa; 
-    border-radius: 10px; 
-}
-
-::-webkit-scrollbar-track {
-    background-color: #f1f1f1; 
-}
-
-
-* {
+﻿* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -27,7 +7,7 @@
 html, body {
     height: 100%;
     margin: 0;
-    overflow-y: hidden;
+    overflow: hidden; 
 }
 
 html {
@@ -41,27 +21,25 @@ html {
 }
 
 body {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
     margin-bottom: 0;
-    overflow-x: hidden; 
+    height: 100%;
+    overflow: hidden;
 }
 
-.main-content {
-    flex: 1;
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+.login-page .main-content {
     display: flex;
-    justify-content: center;
+    justify-content: center; 
     align-items: flex-start;
-    width: 100%;
     position: relative;
+    height: 100vh;
     padding: 20px;
     box-sizing: border-box;
-    overflow-y: auto; 
-}
-
-.profile-content {
-    margin: 0 auto;
+    width: 100%;
+    overflow: hidden;
 }
 
 .logo-text {
@@ -69,15 +47,17 @@ body {
     left: 20px;
     top: 50px;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-    width: auto;
     text-align: left;
+    z-index: 1;
 }
+
 
 .row {
     display: flex;
     justify-content: center;
     width: 100%;
     max-width: 1200px;
+    margin-top: 50px;
 }
 
 .log-in {
@@ -85,9 +65,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 30px;
+    padding: 20px;
     width: 100%;
-    max-width: 600px;
+    max-width: 750px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     text-align: center;
@@ -120,22 +100,10 @@ body {
 }
 
 .card.mb-4 {
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-footer {
-    text-align: left;
-    position: relative;
-    bottom: 0;
-    width: 100%;
-    background-color: #f8f9fa;
-    padding: 5px 20px;
-    height: 40px;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
+    padding: 20px; 
+    margin-bottom: 20px; 
+    max-width: 800px; 
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .index-broadcasts {
@@ -152,42 +120,15 @@ footer {
         padding: 5px;
     }
 
-
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.5);
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    width: 400px;
+footer {
+    text-align: left;
     position: relative;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    cursor: pointer;
-}
-
-.blur-background {
-    filter: blur(4px);
-    pointer-events: none;
-}
-
-body.modal-open {
-    overflow: hidden;
+    bottom: 0;
+    width: 100%;
+    background-color: #f8f9fa;
+    padding: 5px 20px; 
+    height: 40px; 
+    font-size: 12px; 
+    display: flex;
+    align-items: center;
 }

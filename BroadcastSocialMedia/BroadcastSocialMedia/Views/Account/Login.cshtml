@@ -1,11 +1,24 @@
 ﻿@model BroadcastSocialMedia.ViewModels.AccountLoginViewModel
 
-<div class="main-content">
-    <div class="logo-text">
-        <h3>Butterfly</h3>
-        <p>The place to connect <br /> with friends and loved ones.</p>
-    </div>
+@{
+    ViewData["PageClass"] = "login-page";
+}
 
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - BroadcastSocialMedia</title>
+
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+
+<div class="logo-text">
+    <h3>Butterfly</h3>
+    <p>The place to connect <br /> with friends and loved ones.</p>
+</div>
+
+<div class="login-container">
     <div class="row justify-content-center">
         <div class="col-md-12 d-flex justify-content-center">
             <div class="card mb-4 shadow-sm">
@@ -16,7 +29,6 @@
 
                     <div class="log-in mt-4">
                         <h2>Login</h2>
-
                         <div class="login-box">
                             <form asp-action="Login" method="post">
                                 <div class="form-group">
@@ -24,24 +36,20 @@
                                     <input asp-for="Email" class="form-control" />
                                     <span asp-validation-for="Email" class="text-danger"></span>
                                 </div>
-
                                 <div class="form-group">
                                     <label asp-for="Password"></label>
                                     <input asp-for="Password" class="form-control" type="password" />
                                     <span asp-validation-for="Password" class="text-danger"></span>
                                 </div>
-
                                 <div class="form-group">
                                     <div class="form-check">
                                         <input asp-for="RememberMe" class="form-check-input" />
                                         <label asp-for="RememberMe" class="form-check-label"></label>
                                     </div>
                                 </div>
-
                                 <div class="password-text">
                                     <a asp-action="ForgotPassword">Forgot your password?</a>
                                 </div>
-
                                 <button type="submit" class="btn btn-primary mt-3">Login</button>
                             </form>
                         </div>

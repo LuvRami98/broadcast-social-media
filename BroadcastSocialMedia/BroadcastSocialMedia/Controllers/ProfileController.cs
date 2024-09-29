@@ -21,25 +21,43 @@ namespace BroadcastSocialMedia.Controllers
         public async Task<IActionResult> Index()
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Redirect("/Account/Login");
+            }
+
+            var broadcasts = _dbContext.Broadcasts.Where(b => b.UserId == user.Id).ToList();
 
             var viewModel = new ProfileIndexViewModel()
             {
                 Name = user.Name ?? "",
-                CurrentProfilePicturePath = user.ProfilePicturePath
+                CurrentProfilePicturePath = user.ProfilePicturePath,
+                Broadcasts = broadcasts 
             };
+
             return View(viewModel);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Update(ProfileIndexViewModel viewModel)
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Redirect("/Account/Login");
+            }
 
             user.Name = viewModel.Name;
 
+            if (!string.IsNullOrEmpty(viewModel.SelectedImagePath))
+            {
+                user.ProfilePicturePath = viewModel.SelectedImagePath;
+            }
+
             await _userManager.UpdateAsync(user);
 
-            return Redirect("/");
+            return RedirectToAction("Index");
         }
 
         [HttpPost]
@@ -74,6 +92,26 @@ namespace BroadcastSocialMedia.Controllers
 
             return RedirectToAction("Index");
         }
+
+        [HttpPost]
+        public async Task<IActionResult> SelectExistingProfilePicture(string selectedImagePath)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Redirect("/Account/Login");
+            }
+
+            if (!string.IsNullOrEmpty(selectedImagePath))
+            {
+                user.ProfilePicturePath = selectedImagePath;
+                await _userManager.UpdateAsync(user);
+            }
+
+            return RedirectToAction("Index");
+        }
+
+
     }
 
 }

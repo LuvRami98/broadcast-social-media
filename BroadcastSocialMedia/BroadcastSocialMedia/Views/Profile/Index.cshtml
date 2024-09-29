@@ -1,72 +1,121 @@
 ﻿@model ProfileIndexViewModel
 
-<div>
-    <h1>Update profile</h1>
+<div id="blurredContent">
+    <div class="profile-content">
+        <h1>Profile Page</h1>
 
-    <div>
-        <h3>Current Profile Picture</h3>
-        @if (!string.IsNullOrEmpty(Model.CurrentProfilePicturePath))
+        <button type="button" onclick="toggleProfileUpdate()">Update Profile</button>
+
+        <hr />
+
+        <h3>Your Broadcasts</h3>
+        @if (Model.Broadcasts != null && Model.Broadcasts.Any())
         {
-            <img src="@Model.CurrentProfilePicturePath" alt="Profile Picture" style="max-width: 150px;" />
+            @foreach (var broadcast in Model.Broadcasts)
+            {
+                <p>
+                    <b>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</b>:
+                    @broadcast.Message
+                </p>
+
+                @if (!string.IsNullOrEmpty(broadcast.ImagePath))
+                {
+                    <div>
+                        <img src="@broadcast.ImagePath" alt="Broadcast image" style="max-width: 30%; height: auto;" />
+                    </div>
+                }
+            }
         }
         else
         {
-            <p>No profile picture set.</p>
+            <p>No broadcasts found.</p>
         }
     </div>
-
-    <hr />
-
-    <h3>Change Profile Picture</h3>
-
-    <form method="post" enctype="multipart/form-data" action="/Profile/ProfilePicture">
-        @Html.AntiForgeryToken()
-        <div>
-            <button type="button" onclick="toggleImageOptions()">Change profile picture</button>
-        </div>
-
-        <div id="imageOptions" style="display: none; margin-top: 20px;">
-            <div style="margin-bottom: 20px;">
-                <button type="button" onclick="toggleUpload()">Upload new image</button>
-                <div id="uploadSection" style="display: none;">
-                    <input type="file" name="ProfilePicture" />
-                </div>
-            </div>
-
-            <div>
-                <button type="button" onclick="toggleSelectExisting()">Choose from existing images</button>
-                <div id="existingSection" style="display: none;">
-                    <p>Select one of your previously uploaded images (feature to be added)</p>
-                </div>
-            </div>
-        </div>
-
-        <div style="margin-top: 20px;">
-            <input type="submit" value="Save Changes" />
-        </div>
-    </form>
-
-    <hr />
-
-    <form method="post" action="/Profile/Update">
-        <input name="Name" value="@Model.Name" placeholder="Name" />
-        <input type="submit" value="Save" />
-    </form>
 </div>
 
-<script>
-    function toggleImageOptions() {
-        var options = document.getElementById("imageOptions");
-        options.style.display = options.style.display === "none" ? "block" : "none";
-    }
+<div id="profileUpdateModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleModal()">&times;</span>
+        <h3>Update Profile</h3>
 
-    function toggleUpload() {
-        var upload = document.getElementById("uploadSection");
-        upload.style.display = upload.style.display === "none" ? "block" : "none";
-    }
+        <div>
+            <h3>Current Profile Picture</h3>
+            @if (!string.IsNullOrEmpty(Model.CurrentProfilePicturePath))
+            {
+                <img id="profilePicturePreview" src="@Model.CurrentProfilePicturePath" alt="Profile Picture" style="max-width: 150px;" />
+            }
+            else
+            {
+                <p>No profile picture set.</p>
+                <img id="profilePicturePreview" src="" alt="Profile Picture" style="max-width: 150px; display:none;" />
+            }
+        </div>
 
-    function toggleSelectExisting() {
-        var existing = document.getElementById("existingSection");
-        existing.style.display = existing.style.display === "none" ? "block" : "none";
-    }
-</script>
+
+        <hr />
+
+        <h3>Change Profile Picture</h3>
+        <form id="profilePictureForm" method="post" action="/Profile/Update">
+            @Html.AntiForgeryToken()
+
+            <div>
+                <button type="button" onclick="toggleImageOptions()">Change profile picture</button>
+            </div>
+
+            <div id="imageOptions" style="display: none; margin-top: 20px;">
+                <div style="margin-bottom: 20px;">
+                    <button type="button" onclick="toggleUpload()">Upload new image</button>
+                    <div id="uploadSection" style="display: none;">
+                        <input type="file" name="ProfilePicture" />
+                    </div>
+                </div>
+
+                <div>
+                    <button type="button" onclick="toggleSelectExisting()">Choose from existing images</button>
+                    <div id="existingSection" style="display: none; margin-top: 20px;">
+                        <h3>Select one of your previously uploaded images</h3>
+
+                        @if (Model.Broadcasts != null && Model.Broadcasts.Any(b => !string.IsNullOrEmpty(b.ImagePath)))
+                        {
+                            <div>
+                                @foreach (var broadcast in Model.Broadcasts.Where(b => !string.IsNullOrEmpty(b.ImagePath)))
+                                {
+                                    <div style="display: inline-block; margin-right: 10px;">
+                                        <input type="radio" name="selectedImagePath" value="@broadcast.ImagePath" id="img-@broadcast.Id" />
+                                        <label for="img-@broadcast.Id">
+                                            <img src="@broadcast.ImagePath" alt="Broadcast image" style="max-width: 100px; height: auto;" />
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+
+                            <div style="margin-top: 20px;">
+                                <input type="button" value="Set as Profile Picture" onclick="setProfilePicture()" />
+                            </div>
+                        }
+                        else
+                        {
+                            <p>No previously uploaded images found.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <input type="hidden" id="hiddenSelectedImagePath" name="SelectedImagePath" value="" />
+
+            <div style="margin-top: 20px;">
+                <input type="submit" value="Save Changes" />
+            </div>
+        </form>
+
+        <hr />
+        <form method="post" action="/Profile/Update">
+            @Html.AntiForgeryToken()
+            <input name="Name" value="@Model.Name" placeholder="Name" />
+            <input type="submit" value="Save" />
+        </form>
+    </div>
+</div>
+
+
+<script src="~/js/site.js"></script>

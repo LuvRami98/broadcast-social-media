@@ -1,4 +1,6 @@
-﻿namespace BroadcastSocialMedia.ViewModels
+﻿using BroadcastSocialMedia.Models;
+
+namespace BroadcastSocialMedia.ViewModels
 {
     public class ProfileIndexViewModel
     {
@@ -6,5 +8,7 @@
         public IFormFile ProfilePicture { get; set; }
 
         public string CurrentProfilePicturePath { get; set; }
+        public List<Broadcast> Broadcasts { get; set; }
+        public string SelectedImagePath { get; set; }
     }
 }
