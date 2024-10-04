@@ -3,6 +3,7 @@ using BroadcastSocialMedia.Models;
 using BroadcastSocialMedia.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BroadcastSocialMedia.Controllers
 {
@@ -11,12 +12,14 @@ namespace BroadcastSocialMedia.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ApplicationDbContext _dbContext;
         private readonly IWebHostEnvironment _hostingEnvironment;
+        private readonly ILogger<ProfileController> _logger;
 
-        public ProfileController(UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment hostingEnvironment)
+        public ProfileController(UserManager<ApplicationUser> userManager, ApplicationDbContext dbContext, IWebHostEnvironment hostingEnvironment, ILogger<ProfileController> logger)
         {
             _userManager = userManager;
             _dbContext = dbContext;
             _hostingEnvironment = hostingEnvironment;
+            _logger = logger;
         }
         public async Task<IActionResult> Index()
         {
@@ -32,7 +35,8 @@ namespace BroadcastSocialMedia.Controllers
             {
                 Name = user.Name ?? "",
                 CurrentProfilePicturePath = user.ProfilePicturePath,
-                Broadcasts = broadcasts 
+                Broadcasts = broadcasts,
+                Username = user.UserName
             };
 
             return View(viewModel);
@@ -111,7 +115,54 @@ namespace BroadcastSocialMedia.Controllers
             return RedirectToAction("Index");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> UpdateUsername(ProfileIndexViewModel viewModel)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Redirect("/Account/Login");
+            }
+
+            if (viewModel == null || string.IsNullOrEmpty(viewModel.Username))
+            {
+                ModelState.AddModelError("", "Please provide a username.");
+                return RedirectToAction("Index");
+            }
+
+            var isUsernameTaken = _dbContext.Users.Any(u => u.UserName == viewModel.Username && u.Id != user.Id);
+            if (isUsernameTaken)
+            {
+                ModelState.AddModelError("", "This username is already taken. Please choose another.");
+                return RedirectToAction("Index");
+            }
+
+            user.UserName = viewModel.Username;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError("", error.Description);
+                }
+                return RedirectToAction("Index");
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public IActionResult CheckUsername(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                return Json(new { isTaken = false });
+            }
+
+            var isUsernameTaken = _dbContext.Users.Any(u => u.UserName == username);
+            return Json(new { isTaken = isUsernameTaken });
+        }
 
     }
-
 }

@@ -2,9 +2,9 @@
 
 <div id="blurredContent">
     <div class="profile-content">
-        <h1>Profile Page</h1>
+        <h1>@Model.Username's Profile Page</h1>
 
-        <button type="button" onclick="toggleProfileUpdate()">Update Profile</button>
+        <button type="button" class="btn-primary" onclick="toggleProfileUpdate()">Update Profile</button>
 
         <hr />
 
@@ -38,6 +38,20 @@
         <span class="close" onclick="toggleModal()">&times;</span>
         <h3>Update Profile</h3>
 
+        <div id="usernameError" class="alert alert-danger" style="display: none;"></div>
+
+        <div>
+            <h3>Set Username</h3>
+            <form id="usernameForm" method="post" action="/Profile/UpdateUsername">
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                    <label for="Username">Username</label>
+                    <input id="Username" name="Username" class="form-control" value="@Model.Username" placeholder="Enter a username" />
+                </div>
+                <button type="submit" id="setUsernameButton" class="btn-primary">Set Username</button>
+            </form>
+        </div>
+
         <div>
             <h3>Current Profile Picture</h3>
             @if (!string.IsNullOrEmpty(Model.CurrentProfilePicturePath))
@@ -51,7 +65,6 @@
             }
         </div>
 
-
         <hr />
 
         <h3>Change Profile Picture</h3>
@@ -59,19 +72,19 @@
             @Html.AntiForgeryToken()
 
             <div>
-                <button type="button" onclick="toggleImageOptions()">Change profile picture</button>
+                <button type="button" class="btn-primary" onclick="toggleImageOptions()">Change profile picture</button>
             </div>
 
             <div id="imageOptions" style="display: none; margin-top: 20px;">
                 <div style="margin-bottom: 20px;">
-                    <button type="button" onclick="toggleUpload()">Upload new image</button>
+                    <button type="button" class="btn-primary" onclick="toggleUpload()">Upload new image</button>
                     <div id="uploadSection" style="display: none;">
                         <input type="file" name="ProfilePicture" />
                     </div>
                 </div>
 
                 <div>
-                    <button type="button" onclick="toggleSelectExisting()">Choose from existing images</button>
+                    <button type="button" class="btn-primary" onclick="toggleSelectExisting()">Choose from existing images</button>
                     <div id="existingSection" style="display: none; margin-top: 20px;">
                         <h3>Select one of your previously uploaded images</h3>
 
@@ -90,7 +103,7 @@
                             </div>
 
                             <div style="margin-top: 20px;">
-                                <input type="button" value="Set as Profile Picture" onclick="setProfilePicture()" />
+                                <input type="button" class="btn-primary" value="Set as Profile Picture" onclick="setProfilePicture()" />
                             </div>
                         }
                         else
@@ -104,7 +117,7 @@
             <input type="hidden" id="hiddenSelectedImagePath" name="SelectedImagePath" value="" />
 
             <div style="margin-top: 20px;">
-                <input type="submit" value="Save Changes" />
+                <input type="submit" class="btn-primary" value="Save Changes" />
             </div>
         </form>
 
@@ -112,10 +125,9 @@
         <form method="post" action="/Profile/Update">
             @Html.AntiForgeryToken()
             <input name="Name" value="@Model.Name" placeholder="Name" />
-            <input type="submit" value="Save" />
+            <input type="submit" class="btn-primary" value="Save" />
         </form>
     </div>
 </div>
-
 
 <script src="~/js/site.js"></script>

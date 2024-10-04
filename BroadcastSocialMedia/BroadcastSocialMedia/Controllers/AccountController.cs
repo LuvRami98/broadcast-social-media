@@ -30,11 +30,35 @@ namespace BroadcastSocialMedia.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user == null)
+                {
+                    _logger.LogWarning($"Login failed: user with email {model.Email} not found.");
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    return View(model);
+                }
+
+                var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, lockoutOnFailure: false);
 
                 if (result.Succeeded)
                 {
+                    _logger.LogInformation($"User {user.Email} logged in successfully.");
                     return RedirectToLocal(returnUrl);
+                }
+
+                if (result.IsLockedOut)
+                {
+                    _logger.LogWarning("User account locked out.");
+                    return View("Lockout");
+                }
+                else if (result.RequiresTwoFactor)
+                {
+                    _logger.LogWarning("User requires two-factor authentication.");
+                    return RedirectToAction("SendCode");
+                }
+                else
+                {
+                    _logger.LogWarning("Invalid login attempt.");
                 }
 
                 ModelState.AddModelError(string.Empty, "Invalid login attempt.");
@@ -42,6 +66,7 @@ namespace BroadcastSocialMedia.Controllers
 
             return View(model);
         }
+
 
         private IActionResult RedirectToLocal(string returnUrl)
         {
@@ -136,6 +161,8 @@ namespace BroadcastSocialMedia.Controllers
                 return RedirectToAction("ResetPasswordConfirmation");
             }
 
+            _logger.LogInformation($"Password reset token: {model.Token}");
+
             var result = await _userManager.ResetPasswordAsync(user, model.Token, model.Password);
             if (result.Succeeded)
             {
@@ -147,8 +174,9 @@ namespace BroadcastSocialMedia.Controllers
                 ModelState.AddModelError(string.Empty, error.Description);
             }
 
-            return View();
+            return View(model);
         }
+
 
         [HttpGet]
         public IActionResult ResetPasswordConfirmation()

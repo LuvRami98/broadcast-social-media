@@ -17,6 +17,7 @@ builder.Services.AddScoped<IBroadcastService, BroadcastService>();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
+    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
     options.SignIn.RequireConfirmedAccount = true;
 })
     .AddEntityFrameworkStores<ApplicationDbContext>();
