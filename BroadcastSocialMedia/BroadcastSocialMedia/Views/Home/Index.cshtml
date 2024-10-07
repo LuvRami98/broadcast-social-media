@@ -9,14 +9,16 @@
 
     <h2>New Broadcast</h2>
 
-    <form method="post" action="/Home/Broadcast" enctype="multipart/form-data">
+    <div id="emptyBroadcastError" class="alert alert-danger" style="display: none;"></div>
+
+    <form method="post" action="/Home/Broadcast" enctype="multipart/form-data" id="broadcastForm">
         @Html.AntiForgeryToken()
         <div>
-            <textarea name="Message" placeholder="Enter your message"></textarea>
+            <textarea id="messageInput" name="Message" placeholder="Enter your message"></textarea>
         </div>
         <div>
             <label for="Image">Upload Image (optional):</label>
-            <input type="file" name="Image" />
+            <input type="file" id="imageInput" name="Image" />
         </div>
         <div>
             <input type="submit" value="Post" />

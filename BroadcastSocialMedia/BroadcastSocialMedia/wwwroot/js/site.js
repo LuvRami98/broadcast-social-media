@@ -183,4 +183,35 @@ function previewProfilePicture(input) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('broadcastForm');
+    const messageInput = document.getElementById('messageInput');
+    const imageInput = document.getElementById('imageInput');
+    const emptyBroadcastError = document.getElementById('emptyBroadcastError');
+
+    form.addEventListener('submit', function (event) {
+        const message = messageInput.value.trim();
+        const hasImage = imageInput.files.length > 0;
+
+        if (!message && !hasImage) {
+            event.preventDefault(); 
+            emptyBroadcastError.textContent = "Please provide either a message or an image.";
+            emptyBroadcastError.style.display = 'block';
+        } else {
+            emptyBroadcastError.style.display = 'none'; 
+        }
+    });
+
+    form.addEventListener('input', function () {
+        const canSubmit = messageInput.value.trim() || imageInput.files.length > 0;
+        const submitButton = form.querySelector('input[type="submit"]');
+        if (submitButton) {
+            submitButton.disabled = !canSubmit; 
+        }
+    });
+});
+
+
+
+
 document.addEventListener('DOMContentLoaded', previewSelectedImage);

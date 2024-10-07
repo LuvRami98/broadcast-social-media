@@ -76,6 +76,13 @@ namespace BroadcastSocialMedia.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Broadcast(HomeBroadcastViewModel viewModel)
         {
+
+            if (string.IsNullOrEmpty(viewModel.Message) && viewModel.Image == null)
+            {
+                ModelState.AddModelError("", "Please provide either a message or an image.");
+                return View("Index", viewModel);
+            }
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
