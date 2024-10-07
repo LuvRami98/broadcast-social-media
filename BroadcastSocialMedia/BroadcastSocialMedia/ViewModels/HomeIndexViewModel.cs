@@ -4,6 +4,7 @@ namespace BroadcastSocialMedia.ViewModels
 {
     public class HomeIndexViewModel
     {
-        public List<Broadcast> Broadcasts { get; set; }
+        public List<BroadcastWithLikesViewModel> Broadcasts { get; set; }
+        public Dictionary<int, bool> UserLikes { get; set; }
     }
 }

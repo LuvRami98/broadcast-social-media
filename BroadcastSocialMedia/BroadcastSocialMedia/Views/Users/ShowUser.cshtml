@@ -18,11 +18,11 @@
                 @Html.AntiForgeryToken() 
                 @if (!isListening)
                 {
-                    <button id="listenButton" onclick="handleListen('@Model.User.Id', true)">Follow @Model.User.Name</button>
+                    <button id="listenButton" class="btn-primary" onclick="handleListen('@Model.User.Id', true)">Follow @Model.User.Name</button>
                 }
                 else
                 {
-                    <button id="unlistenButton" onclick="handleListen('@Model.User.Id', false)">Unfollow @Model.User.Name</button>
+                    <button id="unlistenButton" class="btn-primary" onclick="handleListen('@Model.User.Id', false)">Unfollow @Model.User.Name</button>
                 }
             </div>
         }
@@ -41,20 +41,38 @@
 
 @if (Model.User != null)
 {
-    @foreach (var broadcast in Model.Broadcasts)
+    @foreach (var broadcastModel in Model.Broadcasts)
     {
-        <p>
-            <b>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</b>:
-            @broadcast.Message
-        </p>
+        var broadcast = broadcastModel.Broadcast;
+        <div class="broadcast-item">
+            <p>
+                <b>@broadcast.User.Name</b>
+                <span>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</span>
+            </p>
 
-        @if (!string.IsNullOrEmpty(broadcast.ImagePath))
-        {
-            <div>
+            @if (!string.IsNullOrEmpty(broadcast.Message))
+            {
+                <p>@broadcast.Message</p>
+            }
+
+            @if (!string.IsNullOrEmpty(broadcast.ImagePath))
+            {
                 <img src="@broadcast.ImagePath" alt="Broadcast image" style="max-width: 30%; height: auto;" />
+            }
+
+            <div>
+                <span id="like-count-@broadcast.Id">@broadcastModel.LikeCount</span>
+                <button onclick="toggleLike(@broadcast.Id)"
+                        id="like-button-@broadcast.Id"
+                        class="btn @(broadcastModel.UserLiked ? "btn-primary" : "btn-secondary")">
+                    👍
+                </button>
             </div>
-        }
+        </div>
+        <hr />
     }
+
+
 }
 
 

@@ -3,6 +3,7 @@ using BroadcastSocialMedia.Models;
 using BroadcastSocialMedia.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace BroadcastSocialMedia.Controllers
@@ -29,13 +30,21 @@ namespace BroadcastSocialMedia.Controllers
                 return Redirect("/Account/Login");
             }
 
-            var broadcasts = _dbContext.Broadcasts.Where(b => b.UserId == user.Id).ToList();
+            var broadcasts = await _dbContext.Broadcasts
+                .Include(b => b.Likes) 
+                .Where(b => b.UserId == user.Id)
+                .ToListAsync();
 
             var viewModel = new ProfileIndexViewModel()
             {
                 Name = user.Name ?? "",
                 CurrentProfilePicturePath = user.ProfilePicturePath,
-                Broadcasts = broadcasts,
+                Broadcasts = broadcasts.Select(b => new BroadcastWithLikesViewModel
+                {
+                    Broadcast = b,
+                    LikeCount = b.Likes.Count,  
+                    UserLiked = b.Likes.Any(l => l.UserId == user.Id) 
+                }).ToList(),
                 Username = user.UserName
             };
 

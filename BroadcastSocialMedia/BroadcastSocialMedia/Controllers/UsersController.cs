@@ -41,7 +41,7 @@ namespace BroadcastSocialMedia.Controllers
         {
             var loggedInUser = await _dbContext.Users
                 .Include(u => u.ListeningTo)
-                .FirstOrDefaultAsync(u => u.Id == _userManager.GetUserId(User)); // Make sure ListeningTo is loaded
+                .FirstOrDefaultAsync(u => u.Id == _userManager.GetUserId(User));
 
             var user = await _userService.GetUserByIdAsync(userId);
 
@@ -50,17 +50,26 @@ namespace BroadcastSocialMedia.Controllers
                 return NotFound();
             }
 
-            var broadcasts = await _broadcastService.GetBroadcastsForUser(userId);
+            var broadcasts = await _dbContext.Broadcasts
+                .Include(b => b.Likes)  
+                .Where(b => b.UserId == userId)
+                .ToListAsync();
 
             var viewModel = new UsersShowUserViewModel
             {
                 User = user,
-                Broadcasts = broadcasts,
+                Broadcasts = broadcasts.Select(b => new BroadcastWithLikesViewModel
+                {
+                    Broadcast = b,
+                    LikeCount = b.Likes.Count,  
+                    UserLiked = loggedInUser != null && b.Likes.Any(l => l.UserId == loggedInUser.Id) 
+                }).ToList(),
                 LoggedInUser = loggedInUser
             };
 
             return View(viewModel);
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]

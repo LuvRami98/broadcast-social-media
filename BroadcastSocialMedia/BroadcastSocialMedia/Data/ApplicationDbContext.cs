@@ -12,6 +12,7 @@ namespace BroadcastSocialMedia.Data
         }
 
         public DbSet<Broadcast> Broadcasts { get; set; }
+        public DbSet<Like> Likes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -21,6 +22,10 @@ namespace BroadcastSocialMedia.Data
                 .HasMany(u => u.ListeningTo)
                 .WithMany(u => u.Listeners)
                 .UsingEntity(j => j.ToTable("UserListenings"));
+
+            modelBuilder.Entity<Like>()
+                .HasIndex(l => new { l.UserId, l.BroadcastId })
+                .IsUnique();
         }
     }
 }

@@ -35,24 +35,20 @@ namespace BroadcastSocialMedia.Controllers
                 return Redirect("/Account/Login");
             }
 
-            var dbUser = await _dbContext.Users
-                .Include(u => u.ListeningTo)
-                .ThenInclude(u => u.Broadcasts)
-                .FirstOrDefaultAsync(u => u.Id == user.Id);
-
-            if (dbUser == null)
-            {
-                return NotFound();
-            }
-
-            var broadcasts = dbUser.ListeningTo
-                .SelectMany(u => u.Broadcasts)
+            var broadcasts = await _dbContext.Broadcasts
+                .Include(b => b.User)
+                .Include(b => b.Likes)  
                 .OrderByDescending(b => b.Published)
-                .ToList();
+                .ToListAsync();
 
             var viewModel = new HomeIndexViewModel
             {
-                Broadcasts = broadcasts
+                Broadcasts = broadcasts.Select(b => new BroadcastWithLikesViewModel
+                {
+                    Broadcast = b,
+                    LikeCount = b.Likes.Count,  
+                    UserLiked = b.Likes.Any(l => l.UserId == user.Id) 
+                }).ToList()
             };
 
             return View(viewModel);
@@ -111,5 +107,69 @@ namespace BroadcastSocialMedia.Controllers
 
             return RedirectToAction("Index");
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleLike(int broadcastId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var existingLike = await _dbContext.Likes
+                .FirstOrDefaultAsync(l => l.BroadcastId == broadcastId && l.UserId == user.Id);
+
+            if (existingLike != null)
+            {
+                _dbContext.Likes.Remove(existingLike);
+            }
+            else
+            {
+                var like = new Like
+                {
+                    BroadcastId = broadcastId,
+                    UserId = user.Id
+                };
+                _dbContext.Likes.Add(like);
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            var likeCount = await _dbContext.Likes.CountAsync(l => l.BroadcastId == broadcastId);
+            _logger.LogInformation($"Broadcast ID: {broadcastId}, Like Count: {likeCount}, User ID: {user.Id}");
+            return Content(likeCount.ToString()); 
+        }
+
+
+        public bool UserLikedBroadcast(int broadcastId)
+        {
+            var user = _userManager.GetUserAsync(User).Result;
+            return _dbContext.Likes.Any(l => l.BroadcastId == broadcastId && l.UserId == user.Id);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteBroadcast(int broadcastId)
+        {
+            var broadcast = await _dbContext.Broadcasts
+                .Include(b => b.Likes) 
+                .FirstOrDefaultAsync(b => b.Id == broadcastId);
+
+            if (broadcast == null)
+            {
+                return NotFound();
+            }
+
+            _dbContext.Likes.RemoveRange(broadcast.Likes);
+
+            _dbContext.Broadcasts.Remove(broadcast);
+            await _dbContext.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
+
     }
 }

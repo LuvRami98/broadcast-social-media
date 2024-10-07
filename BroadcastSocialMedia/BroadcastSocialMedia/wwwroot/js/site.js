@@ -1,6 +1,5 @@
 ﻿async function handleListen(userId, isListening) {
     const url = isListening ? '/Users/Listen' : '/Users/Unlisten';
-
     const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
     console.log('Sending request to:', url);
@@ -87,59 +86,90 @@ function setProfilePicture() {
         alert("Please select an image.");
     }
 }
+
 document.addEventListener('DOMContentLoaded', function () {
     const usernameInput = document.getElementById('Username');
     const setUsernameButton = document.getElementById('setUsernameButton');
-    const usernameForm = document.getElementById('usernameForm');
-    const usernameError = document.getElementById('usernameError');
 
+    if (usernameInput && setUsernameButton) {
+        const usernameForm = document.getElementById('usernameForm');
+        const usernameError = document.getElementById('usernameError');
 
-    usernameForm.addEventListener('submit', async function (event) {
-        event.preventDefault(); 
+        if (usernameForm && usernameError) {
+            usernameForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                const username = usernameInput.value.trim();
+                if (!username) {
+                    usernameError.textContent = "Please provide a username.";
+                    usernameError.style.display = 'block';
+                    return;
+                }
+                const isTaken = await checkUsernameAvailability(username);
+                if (isTaken) {
+                    usernameError.textContent = "This username is already taken. Please choose another.";
+                    usernameError.style.display = 'block';
+                    return;
+                }
+                usernameError.style.display = 'none';
+                usernameForm.submit();
+            });
 
-        const username = usernameInput.value.trim();
+            usernameInput.addEventListener('input', function () {
+                const username = usernameInput.value.trim();
+                setUsernameButton.disabled = !username;
+            });
 
-        if (!username) {
-            usernameError.textContent = "Please provide a username.";
-            usernameError.style.display = 'block'; 
-            return;
+            if (document.querySelector('.alert-danger')) {
+                toggleProfileUpdate();
+            }
         }
-
-        const isTaken = await checkUsernameAvailability(username);
-
-        if (isTaken) {
-            usernameError.textContent = "This username is already taken. Please choose another.";
-            usernameError.style.display = 'block';
-            return;
-        }
-
-        usernameError.style.display = 'none';
-        usernameForm.submit(); 
-    });
-
-    usernameInput.addEventListener('input', function () {
-        const username = usernameInput.value.trim();
-        setUsernameButton.disabled = !username; 
-    });
-
-    if (document.querySelector('.alert-danger')) {
-        toggleProfileUpdate(); 
     }
 });
-
 
 async function checkUsernameAvailability(username) {
     try {
         const response = await fetch(`/Profile/CheckUsername?username=${encodeURIComponent(username)}`);
         const result = await response.json();
-        return result.isTaken; 
+        return result.isTaken;
     } catch (error) {
         console.error("Error checking username availability:", error);
-        return false; 
+        return false;
     }
 }
 
+function toggleLike(broadcastId) {
+    const likeButton = document.getElementById(`like-button-${broadcastId}`);
+    const likeCountSpan = document.getElementById(`like-count-${broadcastId}`);
 
+    likeButton.disabled = true;
 
+    fetch(`/Home/ToggleLike?broadcastId=${broadcastId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+        }
+    })
+        .then(response => response.text())
+        .then(likeCount => {
+            console.log(`Broadcast ID: ${broadcastId}, Updated Like Count: ${likeCount}`);
+
+            const isLiked = likeButton.classList.contains('btn-primary');
+
+            if (isLiked) {
+                likeButton.classList.remove('btn-primary');
+                likeButton.classList.add('btn-secondary');
+            } else {
+                likeButton.classList.remove('btn-secondary');
+                likeButton.classList.add('btn-primary');
+            }
+
+            likeCountSpan.textContent = likeCount;
+        })
+        .catch(error => console.error('Error updating like:', error))
+        .finally(() => {
+            likeButton.disabled = false;
+        });
+}
 
 document.addEventListener('DOMContentLoaded', previewSelectedImage);
