@@ -1,0 +1,22 @@
+﻿@model List<UserProfileViewModel>
+
+<div class="users-not-followed">
+    <h1>Find New Users</h1>
+
+    @foreach (var user in Model)
+    {
+        <div class="user-item">
+            @if (!string.IsNullOrEmpty(user.ProfilePicturePath))
+            {
+                <div>
+                    <img src="@user.ProfilePicturePath" alt="Profile Picture" style="max-width: 100px; height: auto;" />
+                </div>
+            }
+
+            <div>
+                <a href="@Url.Action("ShowUser", "Users", new { userId = user.UserId })">@user.Name</a>
+            </div>
+        </div>
+        <hr />
+    }
+</div>

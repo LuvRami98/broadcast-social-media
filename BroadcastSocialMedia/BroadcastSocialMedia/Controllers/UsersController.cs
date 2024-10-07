@@ -51,7 +51,7 @@ namespace BroadcastSocialMedia.Controllers
             }
 
             var broadcasts = await _dbContext.Broadcasts
-                .Include(b => b.Likes)  
+                .Include(b => b.Likes)
                 .Where(b => b.UserId == userId)
                 .ToListAsync();
 
@@ -61,8 +61,8 @@ namespace BroadcastSocialMedia.Controllers
                 Broadcasts = broadcasts.Select(b => new BroadcastWithLikesViewModel
                 {
                     Broadcast = b,
-                    LikeCount = b.Likes.Count,  
-                    UserLiked = loggedInUser != null && b.Likes.Any(l => l.UserId == loggedInUser.Id) 
+                    LikeCount = b.Likes.Count,
+                    UserLiked = loggedInUser != null && b.Likes.Any(l => l.UserId == loggedInUser.Id)
                 }).ToList(),
                 LoggedInUser = loggedInUser
             };
@@ -91,7 +91,7 @@ namespace BroadcastSocialMedia.Controllers
 
             await _userService.ListenToUserAsync(loggedInUser.Id, viewModel.UserId);
 
-            return Ok(); 
+            return Ok();
         }
 
 
@@ -115,6 +115,44 @@ namespace BroadcastSocialMedia.Controllers
 
             TempData["SuccessMessage"] = $"You have stopped listening to the user.";
             return RedirectToAction("ShowUser", new { userId = viewModel.UserId });
+        }
+
+        public async Task<IActionResult> UsersNotFollowed()
+        {
+            var loggedInUser = await _userManager.GetUserAsync(User);
+            if (loggedInUser == null)
+            {
+                return Redirect("/Account/Login");
+            }
+
+            var followedUserIds = await _dbContext.Users
+                .Where(u => u.Listeners.Any(l => l.Id == loggedInUser.Id))
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            var usersNotFollowed = await _dbContext.Users
+                .Where(u => !followedUserIds.Contains(u.Id) && u.Id != loggedInUser.Id)
+                .Select(u => new
+                {
+                    User = u,
+                    FollowedByCount = _dbContext.Users
+                        .Where(followedUser => followedUserIds.Contains(followedUser.Id) && followedUser.ListeningTo.Any(l => l.Id == u.Id))
+                        .Count()
+                })
+                .OrderByDescending(u => u.FollowedByCount) 
+                .ThenBy(u => u.User.Name) 
+                .Take(10) 
+                .ToListAsync();
+
+
+            var viewModel = usersNotFollowed.Select(u => new UserProfileViewModel
+            {
+                UserId = u.User.Id,
+                Name = u.User.Name,
+                ProfilePicturePath = u.User.ProfilePicturePath
+            }).ToList();
+
+            return View(viewModel);
         }
 
     }

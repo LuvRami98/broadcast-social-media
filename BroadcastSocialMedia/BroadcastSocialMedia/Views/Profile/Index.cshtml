@@ -42,9 +42,6 @@
     </div>
 </div>
 
-
-
-
 <div id="profileUpdateModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="toggleModal()">&times;</span>
@@ -80,7 +77,7 @@
         <hr />
 
         <h3>Change Profile Picture</h3>
-        <form id="profilePictureForm" method="post" action="/Profile/Update">
+        <form id="profilePictureForm" method="post" action="/Profile/ProfilePicture" enctype="multipart/form-data">
             @Html.AntiForgeryToken()
 
             <div>
@@ -91,7 +88,7 @@
                 <div style="margin-bottom: 20px;">
                     <button type="button" class="btn-primary" onclick="toggleUpload()">Upload new image</button>
                     <div id="uploadSection" style="display: none;">
-                        <input type="file" name="ProfilePicture" />
+                        <input type="file" name="ProfilePicture" onchange="previewProfilePicture(this)" />
                     </div>
                 </div>
 
@@ -141,6 +138,5 @@
         </form>
     </div>
 </div>
-
 
 <script src="~/js/site.js"></script>

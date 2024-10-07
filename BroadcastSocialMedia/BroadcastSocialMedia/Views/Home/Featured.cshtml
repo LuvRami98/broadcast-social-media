@@ -1,0 +1,39 @@
+﻿@model HomeIndexViewModel
+
+<div class="featured-broadcasts">
+    <h1>Featured Broadcasts</h1>
+    @foreach (var broadcastModel in Model.Broadcasts)
+    {
+        var broadcast = broadcastModel.Broadcast;
+        <div class="broadcast-item">
+            <p>
+                <b>@broadcast.User.Name</b>
+                <span>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</span>
+            </p>
+
+            @if (!string.IsNullOrEmpty(broadcast.Message))
+            {
+                <p>@broadcast.Message</p>
+            }
+
+            @if (!string.IsNullOrEmpty(broadcast.ImagePath))
+            {
+                <img src="@broadcast.ImagePath" alt="Broadcast image" style="max-width: 30%; height: auto;" />
+            }
+
+            <div>
+                <span id="like-count-@broadcast.Id">@broadcastModel.LikeCount</span>
+                <button onclick="toggleLike(@broadcast.Id)"
+                        id="like-button-@broadcast.Id"
+                        class="btn @(broadcastModel.UserLiked ? "btn-primary" : "btn-secondary")">
+                    👍
+                </button>
+            </div>
+        </div>
+        <hr />
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/site.js"></script>
+}

@@ -35,9 +35,15 @@ namespace BroadcastSocialMedia.Controllers
                 return Redirect("/Account/Login");
             }
 
+            var followingIds = await _dbContext.Users
+                .Where(u => u.Id == user.Id)
+                .SelectMany(u => u.ListeningTo.Select(f => f.Id))
+                .ToListAsync();
+
             var broadcasts = await _dbContext.Broadcasts
                 .Include(b => b.User)
-                .Include(b => b.Likes)  
+                .Include(b => b.Likes)
+                .Where(b => b.UserId == user.Id || followingIds.Contains(b.UserId))
                 .OrderByDescending(b => b.Published)
                 .ToListAsync();
 
@@ -46,13 +52,14 @@ namespace BroadcastSocialMedia.Controllers
                 Broadcasts = broadcasts.Select(b => new BroadcastWithLikesViewModel
                 {
                     Broadcast = b,
-                    LikeCount = b.Likes.Count,  
-                    UserLiked = b.Likes.Any(l => l.UserId == user.Id) 
+                    LikeCount = b.Likes.Count,
+                    UserLiked = b.Likes.Any(l => l.UserId == user.Id)
                 }).ToList()
             };
 
             return View(viewModel);
         }
+
 
         public IActionResult Privacy()
         {
@@ -170,6 +177,35 @@ namespace BroadcastSocialMedia.Controllers
 
             return RedirectToAction("Index");
         }
+
+        public async Task<IActionResult> Featured()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Redirect("/Account/Login");
+            }
+
+            var broadcasts = await _dbContext.Broadcasts
+                .Include(b => b.User)
+                .Include(b => b.Likes)
+                .OrderByDescending(b => b.Likes.Count)  
+                .Take(10)  
+                .ToListAsync();
+
+            var viewModel = new HomeIndexViewModel
+            {
+                Broadcasts = broadcasts.Select(b => new BroadcastWithLikesViewModel
+                {
+                    Broadcast = b,
+                    LikeCount = b.Likes.Count,
+                    UserLiked = user != null && b.Likes.Any(l => l.UserId == user.Id)
+                }).ToList()
+            };
+
+            return View(viewModel);
+        }
+
 
     }
 }

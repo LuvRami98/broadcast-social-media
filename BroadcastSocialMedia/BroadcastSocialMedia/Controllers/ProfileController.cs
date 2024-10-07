@@ -52,7 +52,6 @@ namespace BroadcastSocialMedia.Controllers
         }
 
 
-        [HttpPost]
         public async Task<IActionResult> Update(ProfileIndexViewModel viewModel)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -61,14 +60,17 @@ namespace BroadcastSocialMedia.Controllers
                 return Redirect("/Account/Login");
             }
 
-            user.Name = viewModel.Name;
-
-            if (!string.IsNullOrEmpty(viewModel.SelectedImagePath))
+            if (!string.IsNullOrEmpty(viewModel.Name))
             {
-                user.ProfilePicturePath = viewModel.SelectedImagePath;
+                user.Name = viewModel.Name;
             }
 
-            await _userManager.UpdateAsync(user);
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "Error updating profile.");
+                return RedirectToAction("Index");
+            }
 
             return RedirectToAction("Index");
         }
@@ -100,11 +102,17 @@ namespace BroadcastSocialMedia.Controllers
                 }
 
                 user.ProfilePicturePath = "/uploads/" + uniqueFileName;
-                await _userManager.UpdateAsync(user);
+            }
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError("", "Error updating profile picture.");
             }
 
             return RedirectToAction("Index");
         }
+
 
         [HttpPost]
         public async Task<IActionResult> SelectExistingProfilePicture(string selectedImagePath)

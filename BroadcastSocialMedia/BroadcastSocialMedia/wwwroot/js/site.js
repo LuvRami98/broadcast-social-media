@@ -172,4 +172,15 @@ function toggleLike(broadcastId) {
         });
 }
 
+function previewProfilePicture(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById('profilePicturePreview').src = e.target.result;
+            document.getElementById('profilePicturePreview').style.display = 'block'; 
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', previewSelectedImage);
