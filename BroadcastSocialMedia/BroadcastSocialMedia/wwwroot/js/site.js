@@ -211,7 +211,26 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+function toggleOptionsMenu(broadcastId) {
+    const menu = document.getElementById(`options-menu-${broadcastId}`);
+    if (menu.style.display === "block") {
+        menu.style.display = "none";
+    } else {
+        menu.style.display = "block";
+    }
+}
 
+function openDeleteModal(broadcastId) {
+    const modal = document.getElementById(`deleteModal-${broadcastId}`);
+    modal.style.display = "flex";
+    document.body.classList.add('modal-open');
+}
+
+function closeDeleteModal(broadcastId) {
+    const modal = document.getElementById(`deleteModal-${broadcastId}`);
+    modal.style.display = "none";
+    document.body.classList.remove('modal-open');
+}
 
 
 document.addEventListener('DOMContentLoaded', previewSelectedImage);

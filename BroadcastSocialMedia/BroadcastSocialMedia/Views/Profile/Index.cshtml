@@ -14,24 +14,48 @@
             @foreach (var broadcastModel in Model.Broadcasts)
             {
                 var broadcast = broadcastModel.Broadcast;
-                <p>
-                    <b>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</b>: @broadcast.Message
-                </p>
+                <div class="broadcast-item">
+                    <p>
+                        <b>@broadcast.Published.ToShortDateString() @broadcast.Published.ToShortTimeString()</b>: @broadcast.Message
+                    </p>
 
-                @if (!string.IsNullOrEmpty(broadcast.ImagePath))
-                {
-                    <div>
-                        <img src="@broadcast.ImagePath" alt="Broadcast image" style="max-width: 30%; height: auto;" />
+                    @if (!string.IsNullOrEmpty(broadcast.ImagePath))
+                    {
+                        <div>
+                            <img src="@broadcast.ImagePath" alt="Broadcast image" style="max-width: 30%; height: auto;" />
+                        </div>
+                    }
+
+                    <div class="broadcast-actions">
+                        <div>
+                            <span id="like-count-@broadcast.Id">@broadcastModel.LikeCount</span>
+                            <button onclick="toggleLike(@broadcast.Id)"
+                                    id="like-button-@broadcast.Id"
+                                    class="btn @(broadcastModel.UserLiked ? "btn-primary" : "btn-secondary")">
+                                👍
+                            </button>
+                        </div>
+
+                        <div class="dropdown">
+                            <button class="dots-button" onclick="toggleOptionsMenu('@broadcast.Id')">⋮</button>
+                            <div id="options-menu-@broadcast.Id" class="dropdown-content">
+                                <button type="button" onclick="openDeleteModal('@broadcast.Id')">Delete Broadcast</button>
+                            </div>
+                        </div>
                     </div>
-                }
+                </div>
 
-                <div>
-                    <span id="like-count-@broadcast.Id">@broadcastModel.LikeCount</span>
-                    <button onclick="toggleLike(@broadcast.Id)"
-                            id="like-button-@broadcast.Id"
-                            class="btn @(broadcastModel.UserLiked ? "btn-primary" : "btn-secondary")">
-                        👍
-                    </button>
+                <div id="deleteModal-@broadcast.Id" class="modal">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeDeleteModal('@broadcast.Id')">&times;</span>
+                        <p>Are you sure you want to delete this broadcast?</p>
+                        <form method="post" action="/Home/DeleteBroadcast">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="broadcastId" value="@broadcast.Id" />
+                            <button type="submit" class="btn-primary">Delete</button>
+                            <button type="button" class="btn-secondary" onclick="closeDeleteModal('@broadcast.Id')">Cancel</button>
+                        </form>
+                    </div>
                 </div>
             }
         }
