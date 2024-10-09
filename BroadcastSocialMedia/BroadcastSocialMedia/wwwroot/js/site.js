@@ -69,12 +69,12 @@ function toggleSelectExisting() {
     existingSection.style.display = existingSection.style.display === "none" ? "block" : "none";
 }
 
-function previewSelectedImage() {
+/* function previewSelectedImage() {
     var radios = document.querySelectorAll('input[name="selectedImagePath"]');
     radios.forEach(radio => {
         radio.removeEventListener('change', updateProfilePicturePreview);
     });
-}
+} */
 
 function setProfilePicture() {
     const selectedImage = document.querySelector('input[name="selectedImagePath"]:checked');
@@ -185,6 +185,9 @@ function previewProfilePicture(input) {
 
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('broadcastForm');
+    if (!form) {
+        return
+    }
     const messageInput = document.getElementById('messageInput');
     const imageInput = document.getElementById('imageInput');
     const emptyBroadcastError = document.getElementById('emptyBroadcastError');
@@ -261,4 +264,4 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-document.addEventListener('DOMContentLoaded', previewSelectedImage);
+//document.addEventListener('DOMContentLoaded', previewSelectedImage);
