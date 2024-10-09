@@ -7,6 +7,8 @@ namespace BroadcastSocialMedia.ViewModels
         public Broadcast Broadcast { get; set; }
         public int LikeCount { get; set; }
         public bool UserLiked { get; set; }
+
+        public List<UserProfileViewModel> LikedUsers { get; set; } = new List<UserProfileViewModel>();
     }
 
 }

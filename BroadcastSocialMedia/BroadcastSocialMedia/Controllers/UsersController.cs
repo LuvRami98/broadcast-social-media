@@ -26,14 +26,20 @@ namespace BroadcastSocialMedia.Controllers
         }
         public async Task<IActionResult> Index(UsersIndexViewModel viewModel)
         {
-
-            if (viewModel.Search != null)
+            var loggedInUser = await _userManager.GetUserAsync(User);
+            if (loggedInUser == null)
             {
-                var users = await _dbContext.Users.Where(u => u.Name.Contains(viewModel.Search))
-                    .ToListAsync();
-                viewModel.Result = users;
+                return Redirect("/Account/Login");
             }
 
+            if (!string.IsNullOrEmpty(viewModel.Search))
+            {
+                viewModel.Result = await _dbContext.Users
+                    .Where(u => u.Name.Contains(viewModel.Search))
+                    .ToListAsync();
+            }
+
+            viewModel.FollowedUsers = await GetFollowedUsers(loggedInUser.Id);
             return View(viewModel);
         }
 
@@ -64,7 +70,8 @@ namespace BroadcastSocialMedia.Controllers
                     LikeCount = b.Likes.Count,
                     UserLiked = loggedInUser != null && b.Likes.Any(l => l.UserId == loggedInUser.Id)
                 }).ToList(),
-                LoggedInUser = loggedInUser
+                LoggedInUser = loggedInUser,
+                FollowedUsers = await GetFollowedUsers(loggedInUser.Id)
             };
 
             return View(viewModel);
@@ -126,7 +133,7 @@ namespace BroadcastSocialMedia.Controllers
             }
 
             var followedUserIds = await _dbContext.Users
-                .Where(u => u.Listeners.Any(l => l.Id == loggedInUser.Id))
+                .Where(u => u.ListeningTo.Any(l => l.Id == loggedInUser.Id))
                 .Select(u => u.Id)
                 .ToListAsync();
 
@@ -139,11 +146,10 @@ namespace BroadcastSocialMedia.Controllers
                         .Where(followedUser => followedUserIds.Contains(followedUser.Id) && followedUser.ListeningTo.Any(l => l.Id == u.Id))
                         .Count()
                 })
-                .OrderByDescending(u => u.FollowedByCount) 
-                .ThenBy(u => u.User.Name) 
-                .Take(10) 
+                .OrderByDescending(u => u.FollowedByCount)  
+                .ThenBy(u => u.User.Name)                   
+                .Take(10)                                   
                 .ToListAsync();
-
 
             var viewModel = usersNotFollowed.Select(u => new UserProfileViewModel
             {
@@ -152,8 +158,33 @@ namespace BroadcastSocialMedia.Controllers
                 ProfilePicturePath = u.User.ProfilePicturePath
             }).ToList();
 
+            var followedUsers = await _dbContext.Users
+                .Where(u => u.ListeningTo.Any(l => l.Id == loggedInUser.Id))
+                .Select(u => new UserProfileViewModel
+                {
+                    UserId = u.Id,
+                    Name = u.Name,
+                    ProfilePicturePath = u.ProfilePicturePath
+                }).ToListAsync();
+
+            ViewBag.FollowedUsers = followedUsers;
+
             return View(viewModel);
         }
 
+
+        public async Task<List<UserProfileViewModel>> GetFollowedUsers(string userId)
+        {
+            var followedUsers = await _dbContext.Users
+                .Where(u => u.ListeningTo.Any(l => l.Id == userId))
+                .Select(u => new UserProfileViewModel
+                {
+                    UserId = u.Id,
+                    Name = u.Name,
+                    ProfilePicturePath = u.ProfilePicturePath
+                }).ToListAsync();
+
+            return followedUsers;
+        }
     }
 }

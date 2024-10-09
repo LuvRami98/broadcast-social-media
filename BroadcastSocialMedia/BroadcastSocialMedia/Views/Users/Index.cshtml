@@ -12,10 +12,28 @@
 
     <h2>Results</h2>
 
-    @foreach (var user in Model.Result)
+    @if (!string.IsNullOrEmpty(Model.Search))
     {
-        <p>
-            <a href="@Url.Action("ShowUser", "Users", new { userId = user.Id })">@user.Name</a>
-        </p>
+        @if (Model.Result.Any())
+        {
+            <div class="user-list">
+                @foreach (var user in Model.Result)
+                {
+                    <div class="user-item">
+                        <div>
+                            <a href="@Url.Action("ShowUser", "Users", new { userId = user.Id })">@user.Name</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                No users found. Try searching for someone else!
+            </div>
+        }
     }
 </div>
+
+@await Html.PartialAsync("_FriendsBox", Model.FollowedUsers)

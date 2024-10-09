@@ -4,31 +4,34 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
+<div class="text-center welcome-new-broadcast-frame">
+    <div class="text-center">
+        <h1 class="display-4">Welcome</h1>
 
-    <h2>New Broadcast</h2>
+        <h2>New Broadcast</h2>
 
-    <div id="emptyBroadcastError" class="alert alert-danger" style="display: none;"></div>
+        <div id="emptyBroadcastError" class="alert alert-danger" style="display: none;"></div>
 
-    <form method="post" action="/Home/Broadcast" enctype="multipart/form-data" id="broadcastForm">
-        @Html.AntiForgeryToken()
-        <div>
-            <textarea id="messageInput" name="Message" placeholder="Enter your message"></textarea>
-        </div>
-        <div>
-            <label for="Image">Upload Image (optional):</label>
-            <input type="file" id="imageInput" name="Image" />
-        </div>
-        <div>
-            <input type="submit" value="Post" />
-        </div>
-    </form>
+        <form method="post" action="/Home/Broadcast" enctype="multipart/form-data" id="broadcastForm">
+            @Html.AntiForgeryToken()
+            <div>
+                <textarea id="messageInput" name="Message" placeholder="Enter your message"></textarea>
+            </div>
+            <div>
+                <label for="Image">Upload Image (optional):</label>
+                <input type="file" id="imageInput" name="Image" />
+            </div>
+            <div>
+                <input type="submit" value="Post" />
+            </div>
+        </form>
+    </div>
 </div>
 
 <hr />
 
 <div class="index-broadcasts">
+    <h1>Recent Broadcasts</h1>
     @foreach (var broadcastModel in Model.Broadcasts)
     {
         var broadcast = broadcastModel.Broadcast;
@@ -48,18 +51,37 @@
                 <img src="@broadcast.ImagePath" alt="Broadcast image" style="max-width: 30%; height: auto;" />
             }
 
-            <div>
+            <div class="like-section">
                 <span id="like-count-@broadcast.Id">@broadcastModel.LikeCount</span>
                 <button onclick="toggleLike(@broadcast.Id)"
                         id="like-button-@broadcast.Id"
                         class="btn @(broadcastModel.UserLiked ? "btn-primary" : "btn-secondary")">
                     👍
                 </button>
+
+                <div class="like-tooltip" id="like-tooltip-@broadcast.Id">
+                    @if (broadcastModel.LikedUsers.Any())
+                    {
+                        <ul>
+                            @foreach (var likedUser in broadcastModel.LikedUsers)
+                            {
+                                <li>@likedUser.Name</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p>No likes yet.</p>
+                    }
+                </div>
             </div>
         </div>
         <hr />
     }
 </div>
+
+
+@await Html.PartialAsync("_FriendsBox", Model.FollowedUsers)
 
 
 @section Scripts {

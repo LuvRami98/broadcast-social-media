@@ -6,5 +6,8 @@ namespace BroadcastSocialMedia.ViewModels
     {
         public string Search { get; set; }
         public List<ApplicationUser> Result { get; set; } = new List<ApplicationUser>();
+
+        public List<UserProfileViewModel> FollowedUsers { get; set; }
+
     }
 }

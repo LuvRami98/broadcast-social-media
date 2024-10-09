@@ -233,4 +233,32 @@ function closeDeleteModal(broadcastId) {
 }
 
 
+function toggleFriendsList() {
+    const friendsList = document.getElementById("friendsList");
+    if (friendsList.style.display === "none") {
+        friendsList.style.display = "block"; 
+    } else {
+        friendsList.style.display = "none"; 
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const likeButtons = document.querySelectorAll('.like-section');
+
+    likeButtons.forEach(button => {
+        const likeButton = button.querySelector('button');
+        const tooltip = button.querySelector('.like-tooltip');
+
+        likeButton.addEventListener('mouseover', () => {
+            tooltip.style.display = 'block';
+        });
+
+        likeButton.addEventListener('mouseout', () => {
+            tooltip.style.display = 'none';
+        });
+    });
+});
+
+
+
 document.addEventListener('DOMContentLoaded', previewSelectedImage);

@@ -3,20 +3,31 @@
 <div class="users-not-followed">
     <h1>Find New Users</h1>
 
-    @foreach (var user in Model)
+    @if (Model.Any())
     {
-        <div class="user-item">
-            @if (!string.IsNullOrEmpty(user.ProfilePicturePath))
+        <div class="user-list">
+            @foreach (var user in Model)
             {
-                <div>
-                    <img src="@user.ProfilePicturePath" alt="Profile Picture" style="max-width: 100px; height: auto;" />
+                <div class="user-item">
+                    <div>
+                        @if (!string.IsNullOrEmpty(user.ProfilePicturePath))
+                        {
+                            <img src="@user.ProfilePicturePath" alt="Profile Picture" />
+                        }
+
+                        <a href="@Url.Action("ShowUser", "Users", new { userId = user.UserId })">@user.Name</a>
+                    </div>
                 </div>
             }
-
-            <div>
-                <a href="@Url.Action("ShowUser", "Users", new { userId = user.UserId })">@user.Name</a>
-            </div>
         </div>
-        <hr />
+    }
+    else
+    {
+        <div class="empty-state">
+            No users to explore right now. Check back later!
+        </div>
     }
 </div>
+
+
+@await Html.PartialAsync("_FriendsBox", ViewBag.FollowedUsers as List<UserProfileViewModel>)

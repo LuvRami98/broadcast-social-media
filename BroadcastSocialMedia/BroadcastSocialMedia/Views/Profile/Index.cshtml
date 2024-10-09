@@ -34,6 +34,22 @@
                                     class="btn @(broadcastModel.UserLiked ? "btn-primary" : "btn-secondary")">
                                 👍
                             </button>
+
+                            <div class="like-tooltip" id="like-tooltip-@broadcast.Id">
+                                @if (broadcastModel.LikedUsers.Any())
+                                {
+                                    <ul>
+                                        @foreach (var likedUser in broadcastModel.LikedUsers)
+                                        {
+                                            <li>@likedUser.Name</li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <p>No likes yet.</p>
+                                }
+                            </div>
                         </div>
 
                         <div class="dropdown">
@@ -162,5 +178,7 @@
         </form>
     </div>
 </div>
+
+@await Html.PartialAsync("_FriendsBox", Model.FollowedUsers)
 
 <script src="~/js/site.js"></script>

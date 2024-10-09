@@ -1,0 +1,29 @@
+﻿@model List<UserProfileViewModel>
+
+<div class="friends-box">
+    <div class="friends-header">
+        <span>Friends</span>
+        <button class="minimize-btn" onclick="toggleFriendsList()">_</button>
+    </div>
+    <div id="friendsList" class="friends-list">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var user in Model)
+            {
+                <div class="friend-item">
+                    @if (!string.IsNullOrEmpty(user.ProfilePicturePath))
+                    {
+                        <img class="friend-pic" src="@user.ProfilePicturePath" alt="Profile Picture" />
+                    }
+                    <span>
+                        <a href="@Url.Action("ShowUser", "Users", new { userId = user.UserId })" class="friend-link">@user.Name</a>
+                    </span>
+                </div>
+            }
+        }
+        else
+        {
+            <p>No friends found.</p>
+        }
+    </div>
+</div>
